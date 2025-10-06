@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+     <!-- Required meta tags -->
+     <meta charset="utf-8">
+     <meta name="viewport" content="width=device-width, initial-scale=1">
+
+     <!-- Bootstrap CSS -->
+     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+
+     <title>Hello, world!</title>
+</head>
+
+<body onload="users_read()">
+
+     <div class="container">
+          <div class="row">
+               <h1>User</h1>
+               <button class="btn btn-primary" onclick="window.open('create.html')">Create User</button>
+          </div>
+          <div class="row">
+               <table class="table">
+                    <thead>
+                         <tr>
+                              <th scope="col">#</th>
+                              <th scope="col">First Name</th>
+                              <th scope="col">Last Name</th>
+                              <th scope="col">User</th>
+                              <th scope="col">Password</th>
+                              <th scope="col">Profile</th>
+                              <th scope="col">Manage</th>
+                         </tr>
+                    </thead>
+                    <tbody id="users_table">
+                         <tr>
+                              <th scope="row">1</th>
+                              <td>Mark</td>
+                              <td>Otto</td>
+                              <td>@mdo</td>
+                              <td>mdo123</td>
+                              <td>Admin</td>
+                         </tr>
+                         <tr>
+                              <th scope="row">2</th>
+                              <td>Jacob</td>
+                              <td>Thornton</td>
+                              <td>@fat</td>
+                              <td>fat123</td>
+                              <td>User</td>
+                         </tr>
+                         <tr>
+                              <th scope="row">3</th>
+                              <td colspan="2">Larry the Bird</td>
+                              <td>@twitter</td>
+                              <td>twitter123</td>
+                              <td>User</td>
+                         </tr>
+                    </tbody>
+               </table>
+          </div>
+     </div>
+
+     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
+          integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
+          crossorigin="anonymous"></script>
+
+</body>
+
+</html>
+
+<script>
+
+     let user_table = document.getElementById("users_table");
+     user_table.innerHTML = "Loading...";
+
+     let users_read = function () {
+          let requestOptions = {
+               method: 'GET',
+               redirect: 'follow'
+          }
+          fetch("http://localhost/api-php/api/users", requestOptions)
+               .then(res => res.text())
+               .then(result => {
+                    user_table.innerHTML = "";
+                    let jsonObj = JSON.parse(result);
+                    for (let user of jsonObj) {
+
+                         let avatar = user.avatar;
+
+                         // ถ้า avatar ไม่ใช่ url ที่ขึ้นต้นด้วย http ให้ใช้รูป default
+                         if (!avatar.startsWith("http")) {
+                              avatar = "https://via.placeholder.com/65x65.png?text=No+Image";
+                         }
+
+                         user_table.innerHTML += `
+                         <tr>
+                              <th scope="row">${user.id}</th>
+                              <td>${user.f_name}</td>
+                              <td>${user.l_name}</td>
+                              <td>${user.username}</td>
+                              <td>${user.password}</td>
+                              <td><img src="${avatar}" width="65px" 65alt="${user.avatar}"/></td>
+                              <td>
+                              <a href="edit.html?id=${user.id}" class="btn btn-warning">Edit</a> 
+                              <button type="button" class="btn btn-danger" onclick="user_delete(${user.id})">Delete</button>
+                              </td>
+                         </tr>
+                         `;
+                    }
+               })
+               .catch(err => console.log("error", err));
+     }
+
+
+     let user_delete = function (id) {
+          let myHeaders = new Headers();
+          myHeaders.append("Content-Type", "application/json");
+
+          let raw = JSON.stringify({ "id": id });
+
+          let requestOptions = {
+               method: "DELETE",
+               headers: myHeaders,
+               body: raw,
+               redirect: "follow"
+          }
+
+          fetch("http://localhost/api-php/api/users/delete.php", requestOptions)
+               .then(res => res.json())
+               .then(result => {
+                    if (result.status === 'success') {
+                         alert("delete success");
+                         users_read();
+                    } else {
+                         alert("error");
+                    }
+
+               })
+               .catch(error => console.log('error', error));
+     }
+</script>
